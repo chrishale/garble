@@ -1,0 +1,177 @@
+import 'package:flutter/material.dart';
+
+import '../data/levels.dart';
+import '../models/level.dart';
+import '../services/progress.dart';
+import '../services/scorer.dart';
+import 'game_screen.dart';
+
+class LevelSelectScreen extends StatelessWidget {
+  final Scorer scorer;
+  final Progress progress;
+
+  const LevelSelectScreen({
+    super.key,
+    required this.scorer,
+    required this.progress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'GARBLE',
+                style: theme.textTheme.displayMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 4,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Pop letters. Find words. Hit max to unlock the next level.',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: ListenableBuilder(
+                  listenable: progress,
+                  builder: (context, _) => ListView.separated(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: kLevels.length,
+                    separatorBuilder: (_, i) => const SizedBox(height: 12),
+                    itemBuilder: (context, i) => _LevelCard(
+                      level: kLevels[i],
+                      scorer: scorer,
+                      progress: progress,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LevelCard extends StatelessWidget {
+  final Level level;
+  final Scorer scorer;
+  final Progress progress;
+
+  const _LevelCard({
+    required this.level,
+    required this.scorer,
+    required this.progress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final unlocked = progress.isUnlocked(level.number);
+    final cleared = level.number <= progress.maxLevelCleared;
+
+    final bgColor = theme.colorScheme.surfaceContainerHighest;
+    final onDim = theme.colorScheme.onSurfaceVariant;
+
+    return Material(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: unlocked
+            ? () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => GameScreen(
+                      level: level,
+                      scorer: scorer,
+                      progress: progress,
+                    ),
+                  ),
+                );
+              }
+            : () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Clear Level ${level.number - 1} with max score to unlock'),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+        child: Opacity(
+          opacity: unlocked ? 1.0 : 0.45,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: cleared
+                        ? theme.colorScheme.primary
+                        : unlocked
+                            ? theme.colorScheme.primary.withValues(alpha: 0.4)
+                            : theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: unlocked
+                      ? Text(
+                          '${level.number}',
+                          style: TextStyle(
+                            color: theme.colorScheme.onPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        )
+                      : Icon(Icons.lock_outline, color: onDim, size: 20),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        level.garble,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 3,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Max ${level.maxScore ?? "—"} pts',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: onDim,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (cleared)
+                  Icon(Icons.check_circle, color: theme.colorScheme.primary)
+                else if (unlocked)
+                  Icon(Icons.chevron_right, color: onDim),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
