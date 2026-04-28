@@ -6,6 +6,11 @@ import '../models/level.dart';
 final List<Level> kLevels = [
   Level(
     number: 1,
+    garble: 'BCATS',
+    words: {'A', 'AS', 'AT', 'BAT', 'BATS', 'CAT', 'CATS'},
+  ),
+  Level(
+    number: 2,
     garble: 'BTRAINS',
     words: {
       'A',
@@ -33,7 +38,7 @@ final List<Level> kLevels = [
     },
   ),
   Level(
-    number: 2,
+    number: 3,
     garble: 'HBREARTD',
     words: {
       'A',
@@ -77,7 +82,7 @@ final List<Level> kLevels = [
     },
   ),
   Level(
-    number: 3,
+    number: 4,
     garble: 'SBRIDGE',
     words: {
       'BE',
@@ -97,7 +102,7 @@ final List<Level> kLevels = [
     },
   ),
   Level(
-    number: 4,
+    number: 5,
     garble: 'FPRIENDS',
     words: {
       'END',
@@ -144,7 +149,7 @@ final List<Level> kLevels = [
     },
   ),
   Level(
-    number: 5,
+    number: 6,
     garble: 'TSCREAMS',
     words: {
       'A',
@@ -177,7 +182,7 @@ final List<Level> kLevels = [
     },
   ),
   Level(
-    number: 6,
+    number: 7,
     garble: 'PLANETS',
     words: {
       'A',
@@ -214,7 +219,7 @@ final List<Level> kLevels = [
     },
   ),
   Level(
-    number: 7,
+    number: 8,
     garble: 'FLOWERS',
     words: {
       'FLOE',
@@ -232,11 +237,12 @@ final List<Level> kLevels = [
       'OR',
       'OW',
       'OWES',
+      'OWE',
       'WE',
     },
   ),
   Level(
-    number: 8,
+    number: 9,
     garble: 'CASTLES',
     words: {
       'A',
@@ -255,6 +261,62 @@ final List<Level> kLevels = [
       'CASTS',
       'CAT',
       'CATS',
+    },
+  ),
+  // TRUNK + DRUNK
+  Level(
+    number: 10,
+    garble: 'DPTRUNKS',
+    words: {
+      'DRUNK',
+      'DRUNKS',
+      'DUNK',
+      'DUNKS',
+      'PUN',
+      'PUNK',
+      'PUNKS',
+      'PUNS',
+      'PUS',
+      'RUN',
+      'RUNS',
+      'TRUNK',
+      'TRUNKS',
+      'US',
+    },
+  ),
+  // TYPHOON + TYCOON
+  Level(
+    number: 11,
+    garble: 'TYPHCOON',
+    words: {
+      'CON',
+      'COO',
+      'ON',
+      'TO',
+      'TON',
+      'TOO',
+      'TYCOON',
+      'TYPHOON',
+      'TYPO',
+    },
+  ),
+  Level(
+    number: 12,
+    garble: 'SLTRENGTH',
+    words: {
+      'LEG',
+      'LENGTH',
+      'LENT',
+      'LET',
+      'NTH',
+      'RENT',
+      'SENT',
+      'SET',
+      'STENT',
+      'STRENGTH',
+      'TEN',
+      'TENT',
+      'TENTH',
     },
   ),
 ];
