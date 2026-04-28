@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../data/levels.dart';
 import '../models/level.dart';
 import '../services/progress.dart';
 import '../services/scorer.dart';
+import '../widgets/garble_stage.dart';
 import 'game_screen.dart';
 
 class LevelSelectScreen extends StatelessWidget {
@@ -26,12 +28,12 @@ class LevelSelectScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'GARBLE',
-                style: theme.textTheme.displayMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 4,
-                  color: theme.colorScheme.primary,
+              Align(
+                alignment: Alignment.centerLeft,
+                child: SvgPicture.asset(
+                  'assets/svg/garble.svg',
+                  height: 120,
+                  semanticsLabel: 'Garble',
                 ),
               ),
               const SizedBox(height: 8),
@@ -81,6 +83,8 @@ class _LevelCard extends StatelessWidget {
     final theme = Theme.of(context);
     final unlocked = progress.isUnlocked(level.number);
     final cleared = level.number <= progress.maxLevelCleared;
+    final foundCount = progress.foundWordCount(level.number);
+    final totalWords = level.words.length;
 
     final bgColor = theme.colorScheme.surfaceContainerHighest;
     final onDim = theme.colorScheme.onSurfaceVariant;
@@ -147,8 +151,8 @@ class _LevelCard extends StatelessWidget {
                       Text(
                         level.garble,
                         style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
+                          fontFamily: kGarbleFontFamily,
+                          fontSize: 32,
                           letterSpacing: 3,
                           color: theme.colorScheme.onSurface,
                         ),
@@ -156,6 +160,13 @@ class _LevelCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         'Max ${level.maxScore ?? "—"} pts',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: onDim,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$foundCount / $totalWords words',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: onDim,
                         ),

@@ -14,19 +14,26 @@ class GarbleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFFFFB020),
-      brightness: Brightness.dark,
-    );
+    const brandYellow = Color(0xFFFFF200);
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: brandYellow,
+          brightness: Brightness.dark,
+        ).copyWith(
+          primary: brandYellow,
+          onPrimary: Colors.black,
+          surface: const Color(0xFF0A0A0A),
+          surfaceContainerHighest: const Color(0xFF1A1A1A),
+        );
     return MaterialApp(
       title: 'Garble',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: scheme,
-        scaffoldBackgroundColor: const Color(0xFF0E0F13),
+        scaffoldBackgroundColor: Colors.black,
         appBarTheme: AppBarTheme(
-          backgroundColor: const Color(0xFF0E0F13),
+          backgroundColor: Colors.black,
           foregroundColor: scheme.onSurface,
           elevation: 0,
           centerTitle: false,
@@ -74,13 +81,13 @@ class _BootstrapState extends State<_Bootstrap> {
   Widget build(BuildContext context) {
     if (_error != null) {
       return Scaffold(
-        body: Center(child: Text(_error!, style: const TextStyle(color: Colors.red))),
+        body: Center(
+          child: Text(_error!, style: const TextStyle(color: Colors.red)),
+        ),
       );
     }
     if (_progress == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return LevelSelectScreen(scorer: _scorer, progress: _progress!);
   }

@@ -5,7 +5,7 @@ import '../models/game.dart';
 import '../models/level.dart';
 import '../services/progress.dart';
 import '../services/scorer.dart';
-import '../widgets/letter_tile.dart';
+import '../widgets/garble_stage.dart';
 
 class GameScreen extends StatefulWidget {
   final Level level;
@@ -25,6 +25,7 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   late final GameController _controller;
+  int _lastBankedSeen = 0;
 
   @override
   void initState() {
@@ -50,6 +51,16 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _handleChange() {
+    final banked = _controller.banked;
+    if (banked.length < _lastBankedSeen) {
+      _lastBankedSeen = 0;
+    }
+    if (banked.length > _lastBankedSeen) {
+      for (var i = _lastBankedSeen; i < banked.length; i++) {
+        widget.progress.recordFoundWord(widget.level.number, banked[i].word);
+      }
+      _lastBankedSeen = banked.length;
+    }
     if (mounted) setState(() {});
     if (_controller.gameOver) {
       final maxScore = widget.level.maxScore ?? 0;
@@ -131,12 +142,6 @@ class _GameScreenState extends State<GameScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _ScoreBar(score: _controller.score, max: maxScore),
-              const SizedBox(height: 24),
-              _StatusLine(controller: _controller),
-              const SizedBox(height: 16),
-              _LettersRow(controller: _controller),
-              const SizedBox(height: 24),
               Text(
                 'BANKED WORDS',
                 style: theme.textTheme.labelMedium?.copyWith(
@@ -146,6 +151,12 @@ class _GameScreenState extends State<GameScreen> {
               ),
               const SizedBox(height: 8),
               Expanded(child: _BankedList(controller: _controller)),
+              const SizedBox(height: 16),
+              _StatusLine(controller: _controller),
+              const SizedBox(height: 16),
+              GarbleStage(controller: _controller),
+              const SizedBox(height: 24),
+              _ScoreBar(score: _controller.score, max: maxScore),
             ],
           ),
         ),
@@ -257,69 +268,6 @@ class _StatusLine extends StatelessWidget {
   }
 }
 
-class _LettersRow extends StatelessWidget {
-  final GameController controller;
-
-  const _LettersRow({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final level = controller.level;
-
-    // The row always fits a single line sized for the initial garble so that
-    // tiles don't grow as letters are popped.
-    final totalTiles = level.garble.length;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const maxTileSize = 56.0;
-        const minTileSize = 24.0;
-        const spacing = 8.0;
-        final available = constraints.maxWidth;
-        final rawTileSize =
-            (available - spacing * (totalTiles - 1)) / totalTiles;
-        final tileSize = rawTileSize.clamp(minTileSize, maxTileSize);
-        final actualSpacing = totalTiles > 1
-            ? ((available - tileSize * totalTiles) / (totalTiles - 1)).clamp(
-                4.0,
-                spacing,
-              )
-            : 0.0;
-
-        final tiles = <Widget>[];
-        for (var i = 0; i < totalTiles; i++) {
-          final active = controller.isPositionActive(i);
-          if (i > 0) tiles.add(SizedBox(width: actualSpacing));
-          tiles.add(
-            AnimatedOpacity(
-              duration: const Duration(milliseconds: 220),
-              opacity: active ? 1.0 : 0.0,
-              child: IgnorePointer(
-                ignoring: !active,
-                child: LetterTile(
-                  key: ValueKey('pos-$i'),
-                  letter: level.garble[i],
-                  size: tileSize,
-                  onTap: controller.gameOver ? null : () => controller.pop(i),
-                  highlighted: active && controller.currentIsWord,
-                ),
-              ),
-            ),
-          );
-        }
-
-        return Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: tiles,
-          ),
-        );
-      },
-    );
-  }
-}
-
 class _BankedList extends StatelessWidget {
   final GameController controller;
 
@@ -328,18 +276,23 @@ class _BankedList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final items = controller.banked;
+    final items = controller.banked.reversed.toList();
     if (items.isEmpty) {
-      return Center(
-        child: Text(
-          'None yet',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+      return Align(
+        alignment: Alignment.bottomCenter,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            'None yet',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       );
     }
     return ListView.separated(
+      reverse: true,
       itemCount: items.length,
       separatorBuilder: (_, i) => const SizedBox(height: 6),
       itemBuilder: (context, i) {
