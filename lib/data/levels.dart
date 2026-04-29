@@ -21,6 +21,7 @@ final List<Level> kLevels = [
       'BIN',
       'BINS',
       'BRA',
+      'BRAN',
       'BRAIN',
       'BRAINS',
       'I',

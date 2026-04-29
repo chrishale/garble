@@ -100,6 +100,14 @@ platform :ios do
   end
 end
 
+def pubspec_version
+  line = File.readlines(File.join(PROJECT_ROOT, "pubspec.yaml")).find { |l| l.start_with?("version:") }
+  raise "no 'version:' line in pubspec.yaml" unless line
+  match = line.match(/^version:\s+(\d+\.\d+\.\d+)\+(\d+)$/)
+  raise "pubspec version line must look like 'version: X.Y.Z+N' (got: #{line.strip})" unless match
+  { semver: match[1], build: match[2] }
+end
+
 platform :android do
   desc "Build AAB via Shorebird and upload to Play Console internal track"
   lane :internal do
@@ -109,6 +117,8 @@ platform :android do
       platform: "android",
     )
 
+    version = pubspec_version
+
     # release_status must be "draft" until the app has been published to
     # Production at least once on Play Console; otherwise Google rejects with
     # "Only releases with status draft may be created on draft app."
@@ -116,6 +126,7 @@ platform :android do
     upload_to_play_store(
       track: "internal",
       release_status: "draft",
+      version_name: "#{version[:semver]} (#{version[:build]})",
       aab: File.join(PROJECT_ROOT, "build", "app", "outputs", "bundle", "release", "app-release.aab"),
       json_key_data: play_service_account_json,
       skip_upload_apk: true,
