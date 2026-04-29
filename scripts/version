@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# Bump the app version in pubspec.yaml, commit, and tag.
+#
+# Usage:
+#   scripts/version <semver>
+#
+# Example:
+#   scripts/version 0.1.0
+#
+# Behaviour:
+#   - Validates <semver> matches X.Y.Z.
+#   - Refuses to run on a dirty working tree.
+#   - Refuses if tag v<semver> already exists.
+#   - Reads the current build number (the +N in `version: X.Y.Z+N`) and
+#     increments it by 1.
+#   - Rewrites pubspec.yaml, commits, and creates an annotated tag v<semver>.
+#   - Does NOT push. Run `git push && git push --tags` to trigger CI.
+
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+  echo "Usage: scripts/version <semver>" >&2
+  echo "Example: scripts/version 0.1.0" >&2
+  exit 1
+fi
+
+NEW_VERSION="$1"
+
+if [[ ! "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "Error: '$NEW_VERSION' is not a valid semver (expected X.Y.Z)." >&2
+  exit 1
+fi
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+PUBSPEC="$REPO_ROOT/pubspec.yaml"
+if [[ ! -f "$PUBSPEC" ]]; then
+  echo "Error: $PUBSPEC not found." >&2
+  exit 1
+fi
+
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "Error: working tree is dirty. Commit or stash changes first." >&2
+  exit 1
+fi
+
+TAG="v$NEW_VERSION"
+if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+  echo "Error: tag $TAG already exists." >&2
+  exit 1
+fi
+
+CURRENT_LINE="$(grep -E '^version: ' "$PUBSPEC" || true)"
+if [[ -z "$CURRENT_LINE" ]]; then
+  echo "Error: no 'version:' line found in pubspec.yaml." >&2
+  exit 1
+fi
+
+if [[ ! "$CURRENT_LINE" =~ ^version:\ [0-9]+\.[0-9]+\.[0-9]+\+[0-9]+$ ]]; then
+  echo "Error: pubspec version line must look like 'version: X.Y.Z+N'." >&2
+  echo "       Found: $CURRENT_LINE" >&2
+  exit 1
+fi
+
+CURRENT_BUILD="${CURRENT_LINE##*+}"
+NEW_BUILD=$((CURRENT_BUILD + 1))
+NEW_LINE="version: ${NEW_VERSION}+${NEW_BUILD}"
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  sed -i '' -E "s/^version: .*/${NEW_LINE}/" "$PUBSPEC"
+else
+  sed -i -E "s/^version: .*/${NEW_LINE}/" "$PUBSPEC"
+fi
+
+MESSAGE="chore: bump version to ${NEW_VERSION}+${NEW_BUILD}"
+git add "$PUBSPEC"
+git commit -m "$MESSAGE"
+git tag -a "$TAG" -m "$MESSAGE"
+
+echo
+echo "Bumped to ${NEW_VERSION}+${NEW_BUILD} and tagged ${TAG}."
+echo "Push with: git push && git push --tags"
