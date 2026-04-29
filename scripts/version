@@ -10,10 +10,13 @@
 # Behaviour:
 #   - Validates <semver> matches X.Y.Z.
 #   - Refuses to run on a dirty working tree.
-#   - Refuses if tag v<semver> already exists.
 #   - Reads the current build number (the +N in `version: X.Y.Z+N`) and
 #     increments it by 1.
-#   - Rewrites pubspec.yaml, commits, and creates an annotated tag v<semver>.
+#   - Refuses if tag v<semver>+<new-build> already exists. Reusing a semver
+#     with a fresh build number is allowed (and is the intended retry path
+#     after a failed CI upload).
+#   - Rewrites pubspec.yaml, commits, and creates an annotated tag
+#     v<semver>+<new-build>.
 #   - Does NOT push. Run `git push && git push --tags` to trigger CI.
 
 set -euo pipefail
@@ -45,12 +48,6 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 
-TAG="v$NEW_VERSION"
-if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-  echo "Error: tag $TAG already exists." >&2
-  exit 1
-fi
-
 CURRENT_LINE="$(grep -E '^version: ' "$PUBSPEC" || true)"
 if [[ -z "$CURRENT_LINE" ]]; then
   echo "Error: no 'version:' line found in pubspec.yaml." >&2
@@ -66,6 +63,12 @@ fi
 CURRENT_BUILD="${CURRENT_LINE##*+}"
 NEW_BUILD=$((CURRENT_BUILD + 1))
 NEW_LINE="version: ${NEW_VERSION}+${NEW_BUILD}"
+TAG="v${NEW_VERSION}+${NEW_BUILD}"
+
+if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+  echo "Error: tag $TAG already exists." >&2
+  exit 1
+fi
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   sed -i '' -E "s/^version: .*/${NEW_LINE}/" "$PUBSPEC"

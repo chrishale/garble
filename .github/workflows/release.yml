@@ -52,6 +52,7 @@ jobs:
         uses: shorebirdtech/shorebird-release@v1
         with:
           platform: android
+          flutter-version: latest
 
       - name: Upload AAB to Play Console (internal track)
         uses: r0adkll/upload-google-play@v1
@@ -98,6 +99,7 @@ jobs:
         uses: shorebirdtech/shorebird-release@v1
         with:
           platform: ios
+          flutter-version: latest
           args: --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload IPA to TestFlight

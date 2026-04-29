@@ -25,14 +25,14 @@ Behaviour: `scripts/version 0.1.0`
 
 1. Validates exactly one arg matching `^[0-9]+\.[0-9]+\.[0-9]+$`.
 2. Refuses to run if `git status --porcelain` is non-empty.
-3. Refuses if tag `v<arg>` already exists.
-4. Parses current `+N` from line `^version: ` in `pubspec.yaml` and increments to `N+1`.
-5. Rewrites that line in place to `version: <arg>+<N+1>`.
+3. Parses current `+N` from line `^version: ` in `pubspec.yaml` and increments to `N+1`.
+4. Refuses if tag `v<arg>+<N+1>` already exists.
+5. Rewrites the `version:` line in place to `version: <arg>+<N+1>`.
 6. `git add pubspec.yaml`, commit `chore: bump version to <arg>+<N+1>`.
-7. Annotated tag `v<arg>` with the same message.
+7. Annotated tag `v<arg>+<N+1>` with the same message.
 8. Prints "Push with: `git push && git push --tags`".
 
-Build-number monotonicity is enforced by always incrementing — both stores require strictly increasing build numbers, so reusing a semver tag is the only failure mode and the tag-existence check blocks it.
+Build-number monotonicity is enforced by always incrementing — both stores require strictly increasing build numbers. The tag-existence check now keys on the full `(semver, build)` pair, so reusing a semver with a fresh build number is allowed: that is the intended retry path after a failed CI upload (see Failure recovery in Verification).
 
 ### `ios/ExportOptions.plist`
 
@@ -185,14 +185,14 @@ Used by `apple-actions/upload-testflight-build` instead of an Apple ID.
 ## Verification
 
 1. **Script unit-check** (no push):
-   - On a throwaway branch: `./scripts/version 9.9.9` → check `pubspec.yaml` updated, commit exists, tag `v9.9.9` exists. Run again → should refuse (tag exists). Then `git tag -d v9.9.9 && git reset --hard HEAD~1` to clean up.
+   - On a throwaway branch: `./scripts/version 9.9.9` → check `pubspec.yaml` updated, commit exists, tag `v9.9.9+<N+1>` exists. Run again with the same arg → should **succeed** and produce `v9.9.9+<N+2>` (each run bumps the build number, so the new tag is unique). Clean up with `git tag -d v9.9.9+<N+1> v9.9.9+<N+2> && git reset --hard <pre-test sha>`.
    - Run with dirty tree → should refuse.
    - Run with `0.1` (bad arg) → should refuse.
 
 2. **End-to-end release** (real bump after secrets are configured):
-   - `./scripts/version 1.0.1` → produces `1.0.1+<N+1>` and tag `v1.0.1`.
+   - `./scripts/version 1.0.1` → produces `1.0.1+<N+1>` and tag `v1.0.1+<N+1>`.
    - `git push && git push --tags`.
    - Watch the Actions tab: both jobs should go green in roughly 8–15 min.
    - Confirm: AAB visible in Play Console internal track; build visible in App Store Connect → TestFlight at the new build number.
 
-3. **Failure recovery**: if a job fails midway, fix the cause, delete the tag both locally and on remote (`git tag -d v1.0.1 && git push origin :refs/tags/v1.0.1`), then re-run `./scripts/version 1.0.2` to get a fresh build number — never re-push the same tag, since the build number was already consumed by App Store Connect even on a failed upload.
+3. **Failure recovery**: if a job fails midway, fix the cause and re-run `./scripts/version 1.0.1` — it will produce `v1.0.1+<N+2>` (a fresh tag at the same semver). The previous failed tag can be left in place or deleted at your leisure; what matters is that the build number bumps, since App Store Connect consumes the build number even on failed uploads.
