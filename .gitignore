@@ -47,6 +47,16 @@ app.*.map.json
 # Claude Code local tooling
 .claude/
 
+# Fastlane local env + generated artefacts
+fastlane/.env
+fastlane/.env.*
+!fastlane/.env.example
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output
+vendor/bundle
+.bundle
+
 # Release signing secrets — never commit these
 *.p12
 *.mobileprovision

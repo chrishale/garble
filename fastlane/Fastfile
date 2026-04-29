@@ -1,0 +1,130 @@
+require "base64"
+require "fileutils"
+require "tmpdir"
+
+PROJECT_ROOT = File.expand_path("..", __dir__)
+IOS_PROFILE_NAME = "garble_appstore.mobileprovision"
+
+def install_ios_signing
+  return unless ENV["IOS_DIST_CERT_P12_BASE64"]
+
+  setup_ci
+
+  cert_path = File.join(Dir.tmpdir, "dist_cert.p12")
+  File.binwrite(cert_path, Base64.decode64(ENV.fetch("IOS_DIST_CERT_P12_BASE64")))
+
+  import_certificate(
+    certificate_path: cert_path,
+    certificate_password: ENV.fetch("IOS_DIST_CERT_PASSWORD"),
+    keychain_name: "fastlane_tmp_keychain",
+    keychain_password: "",
+  )
+
+  if ENV["IOS_PROVISIONING_PROFILE_BASE64"]
+    profile_dir = File.expand_path("~/Library/MobileDevice/Provisioning Profiles")
+    FileUtils.mkdir_p(profile_dir)
+    File.binwrite(
+      File.join(profile_dir, IOS_PROFILE_NAME),
+      Base64.decode64(ENV.fetch("IOS_PROVISIONING_PROFILE_BASE64")),
+    )
+  end
+
+  # Runner.xcodeproj's Release config uses automatic signing, which fails on
+  # CI (no logged-in Apple account). Flip it to manual signing referencing the
+  # imported profile before flutter/shorebird invokes xcodebuild archive.
+  update_code_signing_settings(
+    path: File.join(PROJECT_ROOT, "ios", "Runner.xcodeproj"),
+    use_automatic_signing: false,
+    team_id: "G67Z2FG39C",
+    bundle_identifier: "uk.co.chrishale.garble",
+    profile_name: "Garble App Store",
+    code_sign_identity: "Apple Distribution",
+    targets: ["Runner"],
+    build_configurations: ["Release"],
+  )
+end
+
+def install_android_signing
+  return unless ENV["ANDROID_KEYSTORE_BASE64"]
+
+  keystore_path = File.join(PROJECT_ROOT, "android", "app", "upload-keystore.jks")
+  File.binwrite(keystore_path, Base64.decode64(ENV.fetch("ANDROID_KEYSTORE_BASE64")))
+
+  key_properties = <<~PROPS
+    storeFile=upload-keystore.jks
+    storePassword=#{ENV.fetch('ANDROID_STORE_PASSWORD')}
+    keyAlias=#{ENV.fetch('ANDROID_KEY_ALIAS')}
+    keyPassword=#{ENV.fetch('ANDROID_KEY_PASSWORD')}
+  PROPS
+
+  File.write(File.join(PROJECT_ROOT, "android", "key.properties"), key_properties)
+end
+
+def app_store_api_key_content
+  if (path = ENV["APPSTORE_API_PRIVATE_KEY_PATH"])
+    File.read(path)
+  else
+    ENV.fetch("APPSTORE_API_PRIVATE_KEY")
+  end
+end
+
+def play_service_account_json
+  if (path = ENV["PLAY_SERVICE_ACCOUNT_JSON_PATH"])
+    File.read(path)
+  else
+    ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON")
+  end
+end
+
+platform :ios do
+  desc "Build IPA via Shorebird and upload to TestFlight"
+  lane :beta do
+    install_ios_signing
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("APPSTORE_API_KEY_ID"),
+      issuer_id: ENV.fetch("APPSTORE_ISSUER_ID"),
+      key_content: app_store_api_key_content,
+    )
+
+    shorebird_release(
+      platform: "ios",
+      flutter_version: "latest",
+      args: "--export-options-plist=ios/ExportOptions.plist",
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      ipa: File.join(PROJECT_ROOT, "build", "ios", "ipa", "garble.ipa"),
+      skip_waiting_for_build_processing: true,
+    )
+  end
+end
+
+platform :android do
+  desc "Build AAB via Shorebird and upload to Play Console internal track"
+  lane :internal do
+    install_android_signing
+
+    shorebird_release(
+      platform: "android",
+      flutter_version: "latest",
+    )
+
+    # release_status must be "draft" until the app has been published to
+    # Production at least once on Play Console; otherwise Google rejects with
+    # "Only releases with status draft may be created on draft app."
+    # After the first manual Production publish, this can switch to "completed".
+    upload_to_play_store(
+      track: "internal",
+      release_status: "draft",
+      aab: File.join(PROJECT_ROOT, "build", "app", "outputs", "bundle", "release", "app-release.aab"),
+      json_key_data: play_service_account_json,
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+end

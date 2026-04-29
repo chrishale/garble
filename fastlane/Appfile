@@ -1,0 +1,8 @@
+for_platform :ios do
+  app_identifier("uk.co.chrishale.garble")
+  team_id("G67Z2FG39C")
+end
+
+for_platform :android do
+  package_name("uk.co.chrishale.garble")
+end
