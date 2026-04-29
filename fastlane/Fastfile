@@ -95,7 +95,14 @@ platform :ios do
     upload_to_testflight(
       api_key: api_key,
       ipa: File.join(PROJECT_ROOT, "build", "ios", "ipa", "garble.ipa"),
-      skip_waiting_for_build_processing: true,
+      # Wait so we can flip the export-compliance flag and assign the external
+      # group on the just-uploaded build (both require build processing to start).
+      skip_waiting_for_build_processing: false,
+      uses_non_exempt_encryption: false,
+      distribute_external: true,
+      groups: ["Garblers"],
+      notify_external_testers: true,
+      reject_build_waiting_for_review: true,
     )
   end
 end
