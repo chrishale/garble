@@ -89,7 +89,6 @@ platform :ios do
 
     shorebird_release(
       platform: "ios",
-      flutter_version: "latest",
       args: "--export-options-plist=ios/ExportOptions.plist",
     )
 
@@ -108,7 +107,6 @@ platform :android do
 
     shorebird_release(
       platform: "android",
-      flutter_version: "latest",
     )
 
     # release_status must be "draft" until the app has been published to
