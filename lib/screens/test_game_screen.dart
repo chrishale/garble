@@ -8,10 +8,7 @@ import '../services/scorer.dart';
 import '../widgets/garble_stage.dart';
 
 /// Result returned when TestGameScreen pops.
-enum TestGameResult {
-  completed,
-  skipped,
-}
+enum TestGameResult { completed, skipped }
 
 /// Game screen for test mode with skip button and feedback collection.
 class TestGameScreen extends StatefulWidget {
@@ -40,7 +37,10 @@ class _TestGameScreenState extends State<TestGameScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = TestGameController(level: widget.level, scorer: widget.scorer);
+    _controller = TestGameController(
+      level: widget.level,
+      scorer: widget.scorer,
+    );
     _controller.addListener(_handleChange);
     _logLevelStart();
   }
@@ -195,7 +195,9 @@ class _TestGameScreenState extends State<TestGameScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Exit Test Mode?'),
-        content: Text('You have tested ${widget.levelsCompleted} levels so far.'),
+        content: Text(
+          'You have tested ${widget.levelsCompleted} levels so far.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -576,6 +578,11 @@ class _GameOverSheet extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _EmojiButton(
+                  emoji: '\u{1F60A}',
+                  label: 'Fun',
+                  onTap: () => onSkipWithFeedback('happy'),
+                ),
+                _EmojiButton(
                   emoji: '\u{1F44D}',
                   label: 'Good',
                   onTap: () => onSkipWithFeedback('thumbs_up'),
@@ -594,11 +601,6 @@ class _GameOverSheet extends StatelessWidget {
                   emoji: '\u{1F621}',
                   label: 'Frustrating',
                   onTap: () => onSkipWithFeedback('angry'),
-                ),
-                _EmojiButton(
-                  emoji: '\u{1F60A}',
-                  label: 'Fun',
-                  onTap: () => onSkipWithFeedback('happy'),
                 ),
               ],
             ),
@@ -651,6 +653,11 @@ class _SkipFeedbackSheet extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _EmojiButton(
+                  emoji: '\u{1F60A}',
+                  label: 'Fun',
+                  onTap: () => onFeedback('happy'),
+                ),
+                _EmojiButton(
                   emoji: '\u{1F44D}',
                   label: 'Good',
                   onTap: () => onFeedback('thumbs_up'),
@@ -669,11 +676,6 @@ class _SkipFeedbackSheet extends StatelessWidget {
                   emoji: '\u{1F621}',
                   label: 'Frustrating',
                   onTap: () => onFeedback('angry'),
-                ),
-                _EmojiButton(
-                  emoji: '\u{1F60A}',
-                  label: 'Fun',
-                  onTap: () => onFeedback('happy'),
                 ),
               ],
             ),
@@ -760,6 +762,11 @@ class _FeedbackSheet extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _EmojiButton(
+                  emoji: '\u{1F60A}',
+                  label: 'Fun',
+                  onTap: () => onFeedback('happy'),
+                ),
+                _EmojiButton(
                   emoji: '\u{1F44D}',
                   label: 'Good',
                   onTap: () => onFeedback('thumbs_up'),
@@ -778,11 +785,6 @@ class _FeedbackSheet extends StatelessWidget {
                   emoji: '\u{1F621}',
                   label: 'Frustrating',
                   onTap: () => onFeedback('angry'),
-                ),
-                _EmojiButton(
-                  emoji: '\u{1F60A}',
-                  label: 'Fun',
-                  onTap: () => onFeedback('happy'),
                 ),
               ],
             ),
