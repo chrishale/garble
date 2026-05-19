@@ -87,7 +87,7 @@ class LevelSelectScreen extends StatelessWidget {
                             ),
                           )
                         : _LevelCard(
-                            level: kLevels[i],
+                            level: kLevels[i - 1],
                             scorer: scorer,
                             progress: progress,
                           ),
