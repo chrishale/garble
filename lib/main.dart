@@ -1,11 +1,32 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 
 import 'data/levels.dart';
 import 'screens/level_select_screen.dart';
+import 'services/dictionary_service.dart';
+import 'services/locale_service.dart';
 import 'services/progress.dart';
 import 'services/scorer.dart';
 
-void main() {
+/// PostHog configuration - replace with your actual values
+const kPostHogApiKey = 'phc_oepVPnbFVFf9cNbgUqiBcpxYuYfhwWXiiUNcXUEV29Y8';
+const kPostHogHost =
+    'https://eu.i.posthog.com'; // or https://eu.i.posthog.com for EU
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
+  // Initialize PostHog
+  final config = PostHogConfig(kPostHogApiKey);
+  config.host = kPostHogHost;
+  config.debug = true; // Set to false in production
+  config.captureApplicationLifecycleEvents = true;
+  await Posthog().setup(config);
+
   runApp(const GarbleApp());
 }
 
@@ -56,6 +77,8 @@ class _BootstrapState extends State<_Bootstrap> {
   String? _error;
 
   static const _scorer = Scorer();
+  final _dictionaryService = DictionaryService();
+  final _localeService = const LocaleService();
 
   @override
   void initState() {
@@ -65,9 +88,24 @@ class _BootstrapState extends State<_Bootstrap> {
 
   Future<void> _load() async {
     try {
+      // 1. Detect locale and load appropriate dictionary
+      final locale = _localeService.detectDictionaryLocale();
+      await _dictionaryService.load(locale);
+
+      // 2. Initialize dictionary-derived words for levels that need them
+      for (final level in kLevels) {
+        if (level.usesDictionary) {
+          final words = _dictionaryService.findWordsForGarble(level.garble);
+          level.initializeWords(words);
+        }
+      }
+
+      // 3. Calculate max scores for all levels
       for (final level in kLevels) {
         level.maxScore = _scorer.maxScore(level.garble, level.words);
       }
+
+      // 4. Load user progress
       final progress = await Progress.load();
       if (!mounted) return;
       setState(() => _progress = progress);
@@ -89,6 +127,10 @@ class _BootstrapState extends State<_Bootstrap> {
     if (_progress == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    return LevelSelectScreen(scorer: _scorer, progress: _progress!);
+    return LevelSelectScreen(
+      scorer: _scorer,
+      progress: _progress!,
+      dictionaryService: _dictionaryService,
+    );
   }
 }

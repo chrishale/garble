@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "869067818889",
+    "project_id": "garble-f1095",
+    "storage_bucket": "garble-f1095.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:869067818889:android:ca9183dc0c7cde1a360358",
+        "android_client_info": {
+          "package_name": "uk.co.chrishale.garble"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6oMCOboJ8hwxrrHYsgWA0S0g2kkLuKCE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -4,12 +4,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 class Progress extends ChangeNotifier {
   static const _key = 'maxLevelCleared';
   static const _foundPrefix = 'foundWords_L';
+  static const _testedGarblesKey = 'testedGarbles';
 
   final SharedPreferences _prefs;
   int _maxLevelCleared;
   final Map<int, Set<String>> _foundWords;
+  final Set<String> _testedGarbles;
 
-  Progress._(this._prefs, this._maxLevelCleared, this._foundWords);
+  Progress._(this._prefs, this._maxLevelCleared, this._foundWords, this._testedGarbles);
 
   static Future<Progress> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -22,7 +24,11 @@ class Progress extends ChangeNotifier {
       if (words == null) continue;
       found[levelNumber] = words.toSet();
     }
-    return Progress._(prefs, prefs.getInt(_key) ?? 0, found);
+
+    // Load tested garbles
+    final testedGarbles = (prefs.getStringList(_testedGarblesKey) ?? []).toSet();
+
+    return Progress._(prefs, prefs.getInt(_key) ?? 0, found, testedGarbles);
   }
 
   /// Highest level number that has been perfected (score == max).
@@ -52,6 +58,28 @@ class Progress extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Test mode tracking (by garble string since levels come from Firestore)
+
+  /// Set of garbles that have been tested.
+  Set<String> get testedGarbles => Set.unmodifiable(_testedGarbles);
+
+  /// Whether a specific garble has been tested.
+  bool hasTestedGarble(String garble) => _testedGarbles.contains(garble);
+
+  /// Record that a garble has been tested.
+  Future<void> recordTestedGarble(String garble) async {
+    if (!_testedGarbles.add(garble)) return;
+    await _prefs.setStringList(_testedGarblesKey, _testedGarbles.toList());
+    notifyListeners();
+  }
+
+  /// Clear all tested garble records (for retesting).
+  Future<void> clearTestedGarbles() async {
+    _testedGarbles.clear();
+    await _prefs.remove(_testedGarblesKey);
+    notifyListeners();
+  }
+
   @visibleForTesting
   Future<void> reset() async {
     _maxLevelCleared = 0;
@@ -63,6 +91,8 @@ class Progress extends ChangeNotifier {
       await _prefs.remove(key);
     }
     _foundWords.clear();
+    _testedGarbles.clear();
+    await _prefs.remove(_testedGarblesKey);
     notifyListeners();
   }
 }

@@ -3,19 +3,23 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../data/levels.dart';
 import '../models/level.dart';
+import '../services/dictionary_service.dart';
 import '../services/progress.dart';
 import '../services/scorer.dart';
 import '../widgets/garble_stage.dart';
 import 'game_screen.dart';
+import 'test_mode_screen.dart';
 
 class LevelSelectScreen extends StatelessWidget {
   final Scorer scorer;
   final Progress progress;
+  final DictionaryService dictionaryService;
 
   const LevelSelectScreen({
     super.key,
     required this.scorer,
     required this.progress,
+    required this.dictionaryService,
   });
 
   @override
@@ -44,18 +48,51 @@ class LevelSelectScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
+              const SizedBox(height: 16),
               Expanded(
                 child: ListenableBuilder(
                   listenable: progress,
                   builder: (context, _) => ListView.separated(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: kLevels.length,
+                    itemCount: kLevels.length + 1,
                     separatorBuilder: (_, i) => const SizedBox(height: 12),
-                    itemBuilder: (context, i) => _LevelCard(
-                      level: kLevels[i],
-                      scorer: scorer,
-                      progress: progress,
-                    ),
+                    itemBuilder: (context, i) => (i === 0)
+                        ? 
+                        Padding(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => TestModeScreen(
+                                      scorer: scorer,
+                                      progress: progress,
+                                      dictionaryService: dictionaryService,
+                                    ),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.science_outlined),
+                              label: const Text('TEST MODE'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                  horizontal: 24,
+                                ),
+                                side: BorderSide(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        : 
+                        _LevelCard(
+                            level: kLevels[i],
+                            scorer: scorer,
+                            progress: progress,
+                          )
                   ),
                 ),
               ),
@@ -109,7 +146,9 @@ class _LevelCard extends StatelessWidget {
             : () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Clear Level ${level.number - 1} with max score to unlock'),
+                    content: Text(
+                      'Clear Level ${level.number - 1} with max score to unlock',
+                    ),
                     duration: const Duration(seconds: 2),
                   ),
                 );
@@ -128,8 +167,8 @@ class _LevelCard extends StatelessWidget {
                     color: cleared
                         ? theme.colorScheme.primary
                         : unlocked
-                            ? theme.colorScheme.primary.withValues(alpha: 0.4)
-                            : theme.colorScheme.surface,
+                        ? theme.colorScheme.primary.withValues(alpha: 0.4)
+                        : theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: unlocked

@@ -67,3 +67,4 @@ vendor/bundle
 *.keystore
 android/key.properties
 android/app/upload-keystore.jks
+service-account.json
