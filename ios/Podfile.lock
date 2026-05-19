@@ -1426,7 +1426,7 @@ PODS:
   - posthog_flutter (0.0.1):
     - Flutter
     - FlutterMacOS
-    - PostHog (~> 3.22)
+    - PostHog (< 4.0.0, >= 3.56.0)
   - PromisesObjC (2.4.0)
   - shared_preferences_foundation (0.0.1):
     - Flutter
@@ -1438,7 +1438,7 @@ DEPENDENCIES:
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - Flutter (from `Flutter`)
   - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
-  - posthog_flutter (from `.symlinks/plugins/posthog_flutter/ios`)
+  - posthog_flutter (from `.symlinks/plugins/posthog_flutter/darwin`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
 
 SPEC REPOS:
@@ -1477,7 +1477,7 @@ EXTERNAL SOURCES:
   flutter_native_splash:
     :path: ".symlinks/plugins/flutter_native_splash/ios"
   posthog_flutter:
-    :path: ".symlinks/plugins/posthog_flutter/ios"
+    :path: ".symlinks/plugins/posthog_flutter/darwin"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
 
@@ -1507,10 +1507,10 @@ SPEC CHECKSUMS:
   leveldb-library: cc8b8f8e013647a295ad3f8cd2ddf49a6f19be19
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   PostHog: f6da05611d29a8facb652f7e2ee8389bc3f96b67
-  posthog_flutter: 631ab870f7daf1ed190deeb2414eb3e347445f37
+  posthog_flutter: 03b15ff7a78e2a4162baaf11f8db37b079412106
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
 
-PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
+PODFILE CHECKSUM: 251cb053df7158f337c0712f2ab29f4e0fa474ce
 
 COCOAPODS: 1.16.2
