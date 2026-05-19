@@ -56,9 +56,8 @@ class LevelSelectScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: kLevels.length + 1,
                     separatorBuilder: (_, i) => const SizedBox(height: 12),
-                    itemBuilder: (context, i) => (i === 0)
-                        ? 
-                        Padding(
+                    itemBuilder: (context, i) => (i == 0)
+                        ? Padding(
                             padding: const EdgeInsets.only(bottom: 24),
                             child: OutlinedButton.icon(
                               onPressed: () {
@@ -87,12 +86,11 @@ class LevelSelectScreen extends StatelessWidget {
                               ),
                             ),
                           )
-                        : 
-                        _LevelCard(
+                        : _LevelCard(
                             level: kLevels[i],
                             scorer: scorer,
                             progress: progress,
-                          )
+                          ),
                   ),
                 ),
               ),

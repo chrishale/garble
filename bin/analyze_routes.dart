@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:garble/core/dictionary.dart';
 import 'package:garble/core/word_finder.dart';
 import 'package:garble/services/route_analyzer.dart';
-import 'package:garble/services/scorer.dart';
 
 // Analyze all possible routes through a Garble puzzle.
 //
@@ -62,10 +61,9 @@ void main(List<String> args) async {
   final words = finder.findWords(garble);
   if (words.isEmpty) {
     if (jsonOutput) {
-      stdout.writeln(jsonEncode({
-        'garble': garble,
-        'error': 'No valid words found',
-      }));
+      stdout.writeln(
+        jsonEncode({'garble': garble, 'error': 'No valid words found'}),
+      );
     } else {
       stderr.writeln('No valid words found in garble: $garble');
     }
@@ -95,8 +93,12 @@ void _printUsage() {
   stdout.writeln();
   stdout.writeln('Options:');
   stdout.writeln('  --dict=us|uk    Dictionary to use (default: us)');
-  stdout.writeln('  --all           Show all routes, not just max-score routes');
-  stdout.writeln('  --limit=N       Max routes when using --all (default: 100)');
+  stdout.writeln(
+    '  --all           Show all routes, not just max-score routes',
+  );
+  stdout.writeln(
+    '  --limit=N       Max routes when using --all (default: 100)',
+  );
   stdout.writeln('  --json          Output in JSON format');
   stdout.writeln('  --help, -h      Show this help');
   stdout.writeln();
@@ -162,9 +164,13 @@ void _outputText(
   if (showAll) {
     final maxRoutes = analysis.maxScoreRoutes;
     stdout.writeln('Routes at max score: ${maxRoutes.length}');
-    stdout.writeln('Total routes found: ${routes.length}${analysis.limitReached ? " (limit reached)" : ""}');
+    stdout.writeln(
+      'Total routes found: ${routes.length}${analysis.limitReached ? " (limit reached)" : ""}',
+    );
   } else {
-    stdout.writeln('Found ${routes.length} route${routes.length == 1 ? "" : "s"} achieving max score');
+    stdout.writeln(
+      'Found ${routes.length} route${routes.length == 1 ? "" : "s"} achieving max score',
+    );
   }
   stdout.writeln();
 
@@ -172,7 +178,7 @@ void _outputText(
   final maxScoreRoutes = analysis.maxScoreRoutes;
   if (maxScoreRoutes.isNotEmpty) {
     stdout.writeln('─' * 60);
-    stdout.writeln('MAX SCORE ROUTES (${maxScore} points)');
+    stdout.writeln('MAX SCORE ROUTES ($maxScore points)');
     stdout.writeln('─' * 60);
 
     for (var i = 0; i < maxScoreRoutes.length; i++) {
@@ -192,11 +198,17 @@ void _outputText(
   if (showAll && routes.length > maxScoreRoutes.length) {
     stdout.writeln();
     stdout.writeln('─' * 60);
-    stdout.writeln('ALL ROUTES (${routes.length} found${analysis.limitReached ? ", limit $limit" : ""})');
+    stdout.writeln(
+      'ALL ROUTES (${routes.length} found${analysis.limitReached ? ", limit $limit" : ""})',
+    );
     stdout.writeln('─' * 60);
     stdout.writeln();
-    stdout.writeln(' #   Score  Words                                    Avg Pops');
-    stdout.writeln('───  ─────  ───────────────────────────────────────  ────────');
+    stdout.writeln(
+      ' #   Score  Words                                    Avg Pops',
+    );
+    stdout.writeln(
+      '───  ─────  ───────────────────────────────────────  ────────',
+    );
 
     for (var i = 0; i < routes.length; i++) {
       final route = routes[i];
@@ -207,7 +219,9 @@ void _outputText(
           .map((s) => '${s.word}(${s.popsSinceLastBank})')
           .join('→');
       final avgPops = route.averagePops.toStringAsFixed(2);
-      stdout.writeln('$num  ${score.padRight(5)}  ${words.padRight(40)}  $avgPops');
+      stdout.writeln(
+        '$num  ${score.padRight(5)}  ${words.padRight(40)}  $avgPops',
+      );
     }
 
     // Score distribution
@@ -225,7 +239,7 @@ void _outputText(
       final bar = '█' * barLen;
       final isMax = score == maxScore;
       stdout.writeln(
-        '  ${score.toString().padLeft(3)} pts: $bar ${count} route${count == 1 ? "" : "s"}${isMax ? " *" : ""}',
+        '  ${score.toString().padLeft(3)} pts: $bar $count route${count == 1 ? "" : "s"}${isMax ? " *" : ""}',
       );
     }
   }
@@ -236,13 +250,11 @@ void _outputText(
   stdout.writeln('OVERALL METRICS');
   stdout.writeln('─' * 60);
   if (maxScoreRoutes.isNotEmpty) {
-    final avgPops = maxScoreRoutes
-            .map((r) => r.averagePops)
-            .reduce((a, b) => a + b) /
+    final avgPops =
+        maxScoreRoutes.map((r) => r.averagePops).reduce((a, b) => a + b) /
         maxScoreRoutes.length;
-    final avgWords = maxScoreRoutes
-            .map((r) => r.wordCount)
-            .reduce((a, b) => a + b) /
+    final avgWords =
+        maxScoreRoutes.map((r) => r.wordCount).reduce((a, b) => a + b) /
         maxScoreRoutes.length;
     stdout.writeln('  Routes at max score: ${maxScoreRoutes.length}');
     stdout.writeln('  Avg words per route: ${avgWords.toStringAsFixed(1)}');
@@ -262,14 +274,16 @@ void _printRouteTable(Route route) {
     if (step.word.length > wordWidth) wordWidth = step.word.length;
   }
 
-  final rowWidth = numWidth + wordWidth + popsWidth + scoreWidth + noteWidth + 14;
-
   // Header
-  stdout.writeln('┌${"─" * (numWidth + 2)}┬${"─" * (wordWidth + 2)}┬${"─" * (popsWidth + 2)}┬${"─" * (scoreWidth + 2)}┬${"─" * (noteWidth + 2)}┐');
+  stdout.writeln(
+    '┌${"─" * (numWidth + 2)}┬${"─" * (wordWidth + 2)}┬${"─" * (popsWidth + 2)}┬${"─" * (scoreWidth + 2)}┬${"─" * (noteWidth + 2)}┐',
+  );
   stdout.writeln(
     '│ ${"#".padRight(numWidth)} │ ${"Word".padRight(wordWidth)} │ ${"Pops".padRight(popsWidth)} │ ${"Score".padRight(scoreWidth)} │ ${"Note".padRight(noteWidth)} │',
   );
-  stdout.writeln('├${"─" * (numWidth + 2)}┼${"─" * (wordWidth + 2)}┼${"─" * (popsWidth + 2)}┼${"─" * (scoreWidth + 2)}┼${"─" * (noteWidth + 2)}┤');
+  stdout.writeln(
+    '├${"─" * (numWidth + 2)}┼${"─" * (wordWidth + 2)}┼${"─" * (popsWidth + 2)}┼${"─" * (scoreWidth + 2)}┼${"─" * (noteWidth + 2)}┤',
+  );
 
   // Rows
   for (var i = 0; i < route.steps.length; i++) {
@@ -282,5 +296,7 @@ void _printRouteTable(Route route) {
     stdout.writeln('│ $num │ $word │ $pops │ $score │ $note │');
   }
 
-  stdout.writeln('└${"─" * (numWidth + 2)}┴${"─" * (wordWidth + 2)}┴${"─" * (popsWidth + 2)}┴${"─" * (scoreWidth + 2)}┴${"─" * (noteWidth + 2)}┘');
+  stdout.writeln(
+    '└${"─" * (numWidth + 2)}┴${"─" * (wordWidth + 2)}┴${"─" * (popsWidth + 2)}┴${"─" * (scoreWidth + 2)}┴${"─" * (noteWidth + 2)}┘',
+  );
 }
